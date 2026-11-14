@@ -4,12 +4,6 @@ from re import search
 import os, sys, datetime
 from json import dumps
 from time import sleep
-parser = ap.ArgumentParser(description="A tool for getting neko and waifu images")
-parser.add_argument("choice", help="Choose between Neko and Waifu", choices=["Neko","Waifu","neko","waifu"], default="neko")
-parser.add_argument("-d", "--directory", help="Where downloaded images to be put", type=str, default='./target')
-parser.add_argument("-l", '--iterations', default=1, help="Iterations", type=int)
-parser.add_argument('-t', '--test', help="Iterations", action="store_true")
-args = parser.parse_args()
 
 def check_if_directory_exists_and_make_dir(dirc):
     Dir = f"{dirc.__str__()}/{datetime.datetime.now().date()}"
@@ -77,8 +71,16 @@ def runWaifu():
         image = rq.get(json_inf["items"][0]["url"])
         with open("waifu.png", "wb")as f: 
             f.write(image.content)
-if __name__ == "__main__":
+def main():
+    parser = ap.ArgumentParser(description="A tool for getting neko and waifu images")
+    parser.add_argument("choice", help="Choose between Neko and Waifu", choices=["Neko","Waifu","neko","waifu"], default="neko")
+    parser.add_argument("-d", "--directory", help="Where downloaded images to be put", type=str, default='./target')
+    parser.add_argument("-l", '--iterations', default=1, help="Iterations", type=int)
+    parser.add_argument('-t', '--test', help="Iterations", action="store_true")
+    args = parser.parse_args()    
     match(args.choice.lower()):
         case "neko": runNeko()
         case "waifu": runWaifu()
         case "tags": listTagsOnWaifuIm()
+if __name__ == "__main__":
+    main()
