@@ -22,23 +22,22 @@ def get_max_image_index(directory: Path):
             folder: max((int(m.group(1)) for f in files if (m := search(r"^image_(\d+)\.[^.]+$", f.name))),
                         default=0) for folder, files in directories_dictionary.items()}
     return max_file_index_per_directory
-def get_neko_image(args):
+def get_neko_image(directory):
     data = rq.get("https://nekos.moe/api/v1/random/image?nsfw=false")
     json_inf = data.json()
     id = json_inf["images"][0]["id"]
     image_url = f"https://nekos.moe/image/{id}"
     image = rq.get(image_url)
-    target_file_directory = check_if_directory_exists_and_make_dir(Path(args.directory))
-    _dict = get_max_image_index(args.directory)
+    target_file_directory = check_if_directory_exists_and_make_dir(Path(directory))
     image_filename = target_file_directory/"image_{_dict[target_file_directory]+1:03d}.png"
     with open(image_filename, "wb") as f:f.write(image.content)
 def run_neko(args):
     iterations: int = int(args.iterations)
-    if args.iterations > 1:
-        for i in range (args.iterations):
+    if iterations > 1:
+        for i in range(iterations):
             if i%5 == 0 and i != 0:
                 sleep(5)
-            get_neko_image(args)
+            get_neko_image(args.directory)
     else:
         get_neko_image(args)
 def list_tags_on_waifu_im():
