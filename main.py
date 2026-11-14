@@ -30,7 +30,7 @@ def get_neko_image(args):
     image = rq.get(image_url)
     target_file_directory = check_if_directory_exists_and_make_dir(Path(args.directory))
     _dict = get_max_image_index(args.directory)
-    image_filename = f"{target_file_directory}/image_{_dict[target_file_directory]+1:03d}.png"
+    image_filename = target_file_directory/"image_{_dict[target_file_directory]+1:03d}.png"
     with open(image_filename, "wb") as f:f.write(image.content)
 def run_neko(args):
     iterations: int = int(args.iterations)
