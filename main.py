@@ -6,8 +6,9 @@ from datetime import datetime
 from json import dumps
 from time import sleep
 
+
 def check_if_directory_exists_and_make_dir(date_directory: Path) -> Path:
-    target_directory = date_directory.joinpath(str(datetime.now().date()))
+    target_directory = date_directory.joinpath(f"{datetime.now().date()}")
     if not target_directory.exists():
         target_directory.mkdir()
     return target_directory
@@ -22,24 +23,25 @@ def get_max_image_index(directory: Path):
             folder: max((int(m.group(1)) for f in files if (m := search(r"^image_(\d+)\.[^.]+$", f.name))),
                         default=0) for folder, files in directories_dictionary.items()}
     return max_file_index_per_directory
-def get_neko_image(directory):
-    data = rq.get("https://nekos.moe/api/v1/random/image?nsfw=false")
+def get_neko_image(directory: Path, headers):
+    data = rq.get("https://nekos.moe/api/v1/random/image?nsfw=false", headers=headers)
     json_inf = data.json()
     id = json_inf["images"][0]["id"]
     image_url = f"https://nekos.moe/image/{id}"
     image = rq.get(image_url)
-    target_file_directory = check_if_directory_exists_and_make_dir(Path(directory))
-    image_filename = target_file_directory/"image_{_dict[target_file_directory]+1:03d}.png"
+    target_file_directory = check_if_directory_exists_and_make_dir(directory)
+    image_filename = target_file_directory/f"image_{get_max_image_index(directory)[target_file_directory]+1:03d}.png"
     with open(image_filename, "wb") as f:f.write(image.content)
-def run_neko(args):
+    return image_filename
+def run_neko(args, headers):
     iterations: int = int(args.iterations)
     if iterations > 1:
         for i in range(iterations):
             if i%5 == 0 and i != 0:
                 sleep(5)
-            get_neko_image(args.directory)
+            print(f"writed {get_neko_image(args.directory, headers=headers)} file")
     else:
-        get_neko_image(args)
+        print(f"writed {get_neko_image(args.directory, headers=headers)} file")
 def list_tags_on_waifu_im():
     data = rq.get("https://api.waifu.im/tags")
     json_inf = data.json()
@@ -74,10 +76,14 @@ def main():
     parser.add_argument('-t', '--test', help="Iterations", action="store_true")
     parser.add_argument("choice", help="Choose between Neko and Waifu", choices=["Neko","Waifu","neko","waifu"], default="neko")
     args = parser.parse_args()
-    if args.test: pass
+    headers = {
+        "User-Agent": "Nekos.moe parser (https://github.com/sirokoto/nekos.moe-image-parser 1.0.0)"
+    }
+    if args.test:
+        run_neko(args, headers=headers)
     else:
         match(args.choice.lower()):
-            case "neko": run_neko(args)
+            case "neko": run_neko(args, headers=headers)
             case "waifu": run_waifu()
             case "tags": list_tags_on_waifu_im()
 if __name__ == "__main__":
